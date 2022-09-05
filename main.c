@@ -1,17 +1,16 @@
-
-#include <msp430.h> 
+#include <msp430.h>
 unsigned long int i = 0;
 void main(void) {
 
     WDTCTL = WDTPW | WDTHOLD;   // Stop watchdog timer
-    //seta tudo como saída
+    //seta tudo como saida
     P1DIR = BIT0 + BIT1 + BIT2 + BIT3 + BIT4 + BIT5 + BIT6 + BIT7;
-    //todas em baixo nível
+    //todas em baixo nivel
     P1OUT = 0x00;
 
-    //seta tudo como saída
+    //seta tudo como saida
     P2DIR = BIT0 + BIT3 + BIT4 + BIT5 + BIT6 + BIT7;
-    //todas em baixo nível
+    //todas em baixo nivel
     P2OUT = BIT1 + BIT2;
     P2REN = BIT1 + BIT2;
     P2IES = BIT1 + BIT2;
@@ -37,8 +36,8 @@ void main(void) {
     };
 
 }
-
-#pragma vector = PORT2_VECTOR
+//TODO arrumar a interrupÃ§ao
+#pragma vector = PORT2_VECTOR //interrupÃ§Ã£o ainda precisa de ajustes
 __interrupt void Port2_RTI(void) {
     switch(P1IFG & (BIT1 + BIT2)){
     case BIT1:
