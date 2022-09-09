@@ -70,5 +70,3 @@ __interrupt void Port1_RTI(void) {
         break;
     }
 }
-
-
