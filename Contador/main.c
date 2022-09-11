@@ -32,6 +32,7 @@ void start_p2(void);
 void mostra_digito(char sel_disp);
 
 int main(void){
+    __enable_interrupt();
     WDTCTL = WDTPW | WDTHOLD;
     start_p1();
     start_p2();
