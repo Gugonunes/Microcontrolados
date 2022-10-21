@@ -37,10 +37,11 @@ void ini_P1_P2(void){
      *     P1.6 - LED VD - saida em nivel baixo;
      *     P1.7 - N.C. - saida em nivel baixo;
      */
-    P1DIR = ~(BIT3 + BIT4 + BIT5);
-    P1REN = BIT3 + BIT4 + BIT5;
-    P1OUT = BIT3 + BIT4 + BIT5;
+    P1DIR = ~(BIT4 + BIT5);
+    P1REN =  BIT4 + BIT5;
+    P1OUT =  BIT4 + BIT5;
     P1IES = BIT4;
+    P1SEL |= BIT6;
     P1IFG = 0;
     P1IE = BIT4;
 
@@ -54,13 +55,13 @@ void ini_Timer0_PWM(void){
      *
      * BLOCO CONTADOR:
      *  Clock: SMCLK ~ 16 MHz
-     *      FDiv = 5;
+     *      FDiv = 8;
      *  Modo contagem: UP
      *  Int. contador: nao utilizada
      *
      * MODULO 0 - Freq. do sinal
      *  Funcao: nativa = comparacao
-     *  TA1CCR0 = (temp*SMCLK)/Fdiv = ((1/100k)*16000000)/1 - 1= 63999;
+     *  TA1CCR0 = (temp*SMCLK)/Fdiv = ((1/50)*16000000)/8 - 1= 39999 -> 39999 é menor que 2^16, então pode ser usado;
      *  Int.: DESabilitada
      *
      * MODULO 1 - RC do sinal 1 - RC1 inicial = 0%
@@ -68,10 +69,10 @@ void ini_Timer0_PWM(void){
      *  TA1CCR1 = 0;
      *  Int.: DESabilitada
      */
-    TA0CTL = TASSEL1 + MC0;
+    TA0CTL = TASSEL1 + MC0 + ID0 + ID1; //IDS Setam o fator de divisão
     TA0CCTL0 = OUTMOD0 + OUTMOD1 + OUTMOD2;
-    TA0CCR0 = 63999;
-    TA0CCR1 = 0;
+    TA0CCR0 = 39999;
+    TA0CCR1 = 2000; // -> 5% de (39999 + 1)
 }
 
 void ini_Timer1(void){
@@ -79,33 +80,33 @@ void ini_Timer1(void){
      *
      * BLOCO CONTADOR:
      *  Clock: SMCLK ~ 2 MHz
-     *      FDiv = 1;
+     *      FDiv = 8;
      *  Modo contagem: Inicialmente parado
      *  Int. contador: nao utilizada
      *
      * MODULO 0
      *  Funcao: nativa = comparacao
-     *  TA0CCR0 = (temp*SMCLK)/Fdiv = (0,002*2000000)/1 - 1= 49999;
+     *  TA0CCR0 = (temp*SMCLK)/Fdiv = (0,002*2000000)/1 - 1= 3999;
      *  Int.: Habilitada
      */
     TA1CTL = TASSEL1 + ID0 + ID1;
     TA1CCTL1 = CCIE;
-    TA1CCR0 = 49999;
+    TA1CCR0 = 3999;
 }
 
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void RTI_TIMER0(void){
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void RTI_TIMER1(void){
     //parada do contador
-    TA0CTL = ~MC0;
+    TA1CTL &= ~MC0;
 
     if ((~P1IN) & BIT4){
         if( P1IN & BIT5 ){
-            if(TA1CCR1 < 100){
-                TA1CCR1 = TA1CCR1 + 5;
+            if(TA0CCR1 < 4000){
+                TA0CCR1 = TA0CCR1 + 200;
             }
         }else{
-            if(TA1CCR1 >= 50){
-                TA1CCR1 = TA1CCR1 - 5;
+            if(TA0CCR1 >= 2000){
+                TA0CCR1 = TA0CCR1 - 200;
             }
         }
     }
@@ -114,8 +115,6 @@ __interrupt void RTI_TIMER0(void){
     P1IE |= BIT4;
 
 }
-
-
 void ini_uCon(void){
 
     WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
@@ -133,5 +132,3 @@ void ini_uCon(void){
     __enable_interrupt();
 
 }
-
-
